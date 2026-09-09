@@ -1,7 +1,9 @@
 import datetime as dt
 
+import pytest
+
 from teemon.models import TeeTime
-from teemon.notify import render, subject_for
+from teemon.notify import render, send, setting, subject_for
 
 
 def match(course="Oak Hills Park (Norwalk)", when="2026-09-12T08:10", players=(2, 4)):
@@ -29,6 +31,21 @@ def test_body_carries_course_time_and_link():
         assert "Oak Hills Park (Norwalk)" in body
         assert "8:10 AM" in body
         assert "https://example.com/book" in body
+
+
+def test_blank_secret_counts_as_unset(monkeypatch):
+    """GitHub Actions supplies unset secrets as empty strings."""
+    monkeypatch.setenv("SMTP_PORT", "")
+    assert setting("SMTP_PORT", "587") == "587"
+
+
+def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com")
+    for name in ("RESEND_API_KEY", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD"):
+        monkeypatch.setenv(name, "")
+
+    with pytest.raises(RuntimeError, match="RESEND_API_KEY"):
+        send([match()])
 
 
 def test_body_reports_omitted_slots():

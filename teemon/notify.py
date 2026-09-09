@@ -21,6 +21,15 @@ RESEND_ENDPOINT = "https://api.resend.com/emails"
 RESEND_DEFAULT_FROM = "Tee Time Monitor <onboarding@resend.dev>"
 
 
+def setting(name: str, default: str | None = None) -> str | None:
+    """Read an env var, treating blank as unset.
+
+    GitHub Actions passes an unset secret through as an empty string, so a
+    plain lookup would see configuration that is not really there.
+    """
+    return os.environ.get(name, "").strip() or default
+
+
 def subject_for(matches: list[tuple[TeeTime, dict]]) -> str:
     slot, hit = matches[0]
     lead = f"{slot.course} {slot.start:%a %-m/%-d %-I:%M %p} ({max(hit['players'])}p)"
@@ -76,17 +85,24 @@ def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
         omitted = len(matches) - limit
         matches = matches[:limit]
 
-    to_address = os.environ["ALERT_EMAIL_TO"]
+    to_address = setting("ALERT_EMAIL_TO")
+    if not to_address:
+        raise RuntimeError("ALERT_EMAIL_TO is not set, so there is nowhere to send alerts")
     subject = subject_for(matches)
     text, html = render(matches, omitted)
 
-    api_key = os.environ.get("RESEND_API_KEY")
+    api_key = setting("RESEND_API_KEY")
     if api_key:
-        from_address = os.environ.get("ALERT_EMAIL_FROM", RESEND_DEFAULT_FROM)
-        _send_resend(api_key, from_address, to_address, subject, text, html)
+        _send_resend(
+            api_key,
+            setting("ALERT_EMAIL_FROM", RESEND_DEFAULT_FROM),
+            to_address,
+            subject,
+            text,
+            html,
+        )
     else:
-        from_address = os.environ.get("ALERT_EMAIL_FROM", to_address)
-        _send_smtp(from_address, to_address, subject, text, html)
+        _send_smtp(setting("ALERT_EMAIL_FROM", to_address), to_address, subject, text, html)
     log.info("emailed %d matching slot(s) to %s", len(matches), to_address)
 
 
@@ -109,10 +125,12 @@ def _send_resend(api_key, from_address, to_address, subject, text, html) -> None
 
 
 def _send_smtp(from_address, to_address, subject, text, html) -> None:
-    host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-    port = int(os.environ.get("SMTP_PORT", "587"))
-    username = os.environ["SMTP_USERNAME"]
-    password = os.environ["SMTP_PASSWORD"]
+    username = setting("SMTP_USERNAME")
+    password = setting("SMTP_PASSWORD")
+    if not username or not password:
+        raise RuntimeError("Neither RESEND_API_KEY nor SMTP_USERNAME/SMTP_PASSWORD is configured")
+    host = setting("SMTP_HOST", "smtp.gmail.com")
+    port = int(setting("SMTP_PORT", "587"))
 
     message = EmailMessage()
     message["Subject"] = subject

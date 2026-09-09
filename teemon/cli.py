@@ -3,7 +3,6 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import logging
-import os
 import sys
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -21,8 +20,8 @@ def credentials_for(course: dict) -> dict | None:
     prefix = course.get("credentials_env")
     if not prefix:
         return None
-    username = os.environ.get(f"{prefix}_USERNAME")
-    password = os.environ.get(f"{prefix}_PASSWORD")
+    username = notify.setting(f"{prefix}_USERNAME")
+    password = notify.setting(f"{prefix}_PASSWORD")
     if username and password:
         return {"username": username, "password": password}
     return None
