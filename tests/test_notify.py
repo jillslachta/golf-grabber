@@ -61,6 +61,14 @@ def test_alerts_go_to_every_listed_recipient(monkeypatch):
     assert captured["to"] == ["golfer@example.com", "caddie@example.com"]
 
 
+def test_display_name_commas_do_not_split_a_recipient(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", '"Slachta, Jill" <golfer@example.com>, caddie@example.com')
+    assert notify._recipients() == [
+        '"Slachta, Jill" <golfer@example.com>',
+        "caddie@example.com",
+    ]
+
+
 def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):
     monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com")
     for name in ("RESEND_API_KEY", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD"):

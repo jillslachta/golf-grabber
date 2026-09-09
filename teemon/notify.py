@@ -7,6 +7,7 @@ import logging
 import os
 import smtplib
 from email.message import EmailMessage
+from email.utils import formataddr, getaddresses
 from html import escape
 
 from .http import TIMEOUT, new_session
@@ -113,8 +114,13 @@ def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
 
 
 def _recipients() -> list[str]:
-    raw = setting("ALERT_EMAIL_TO", "")
-    return [address.strip() for address in raw.split(",") if address.strip()]
+    """Parse ALERT_EMAIL_TO, which may list several comma-separated addresses.
+
+    Parsed as an RFC 5322 address list so a display name may itself contain a
+    comma, as in '"Slachta, Jill" <jill@example.com>'.
+    """
+    parsed = getaddresses([setting("ALERT_EMAIL_TO", "")])
+    return [formataddr((name, address)) for name, address in parsed if address]
 
 
 def _send_resend(api_key, from_address, to_addresses, subject, text, html) -> None:
