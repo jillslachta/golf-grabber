@@ -39,6 +39,11 @@ def test_blank_secret_counts_as_unset(monkeypatch):
     assert setting("SMTP_PORT", "587") == "587"
 
 
+def test_secret_value_keeps_its_whitespace(monkeypatch):
+    monkeypatch.setenv("STERLING_PASSWORD", " hunter2 ")
+    assert setting("STERLING_PASSWORD") == " hunter2 "
+
+
 def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):
     monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com")
     for name in ("RESEND_API_KEY", "SMTP_PORT", "SMTP_USERNAME", "SMTP_PASSWORD"):

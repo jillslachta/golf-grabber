@@ -25,9 +25,11 @@ def setting(name: str, default: str | None = None) -> str | None:
     """Read an env var, treating blank as unset.
 
     GitHub Actions passes an unset secret through as an empty string, so a
-    plain lookup would see configuration that is not really there.
+    plain lookup would see configuration that is not really there. The value
+    itself is returned untrimmed, since a password may end in whitespace.
     """
-    return os.environ.get(name, "").strip() or default
+    value = os.environ.get(name, "")
+    return value if value.strip() else default
 
 
 def subject_for(matches: list[tuple[TeeTime, dict]]) -> str:
