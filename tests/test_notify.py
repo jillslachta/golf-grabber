@@ -2,6 +2,7 @@ import datetime as dt
 
 import pytest
 
+from teemon import notify
 from teemon.models import TeeTime
 from teemon.notify import password, render, send, setting, subject_for
 
@@ -47,6 +48,17 @@ def test_password_keeps_its_whitespace(monkeypatch):
 def test_padded_setting_is_trimmed(monkeypatch):
     monkeypatch.setenv("SMTP_HOST", " smtp.example.com ")
     assert setting("SMTP_HOST") == "smtp.example.com"
+
+
+def test_alerts_go_to_every_listed_recipient(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, caddie@example.com")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    captured = {}
+    monkeypatch.setattr(notify, "_send_resend", lambda *args, **kw: captured.update(to=args[2]))
+
+    send([match()])
+
+    assert captured["to"] == ["golfer@example.com", "caddie@example.com"]
 
 
 def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):
