@@ -47,7 +47,7 @@ Set these as repository secrets (Settings → Secrets and variables → Actions)
 
 | Secret | Purpose |
 | --- | --- |
-| `ALERT_EMAIL_TO` | where alerts go (required) |
+| `ALERT_EMAIL_TO` | where alerts go (required); comma-separate for several recipients |
 | `RESEND_API_KEY` | Resend API key (required unless using SMTP) |
 | `ALERT_EMAIL_FROM` | optional; defaults to Resend's `onboarding@resend.dev` |
 | `OAK_HILLS_USERNAME` / `OAK_HILLS_PASSWORD` | optional; unlocks the member booking class |

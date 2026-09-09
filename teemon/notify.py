@@ -7,6 +7,7 @@ import logging
 import os
 import smtplib
 from email.message import EmailMessage
+from email.utils import formataddr, getaddresses
 from html import escape
 
 from .http import TIMEOUT, new_session
@@ -91,8 +92,8 @@ def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
         omitted = len(matches) - limit
         matches = matches[:limit]
 
-    to_address = setting("ALERT_EMAIL_TO")
-    if not to_address:
+    recipients = _recipients()
+    if not recipients:
         raise RuntimeError("ALERT_EMAIL_TO is not set, so there is nowhere to send alerts")
     subject = subject_for(matches)
     text, html = render(matches, omitted)
@@ -102,24 +103,34 @@ def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
         _send_resend(
             api_key,
             setting("ALERT_EMAIL_FROM", RESEND_DEFAULT_FROM),
-            to_address,
+            recipients,
             subject,
             text,
             html,
         )
     else:
-        _send_smtp(setting("ALERT_EMAIL_FROM", to_address), to_address, subject, text, html)
-    log.info("emailed %d matching slot(s) to %s", len(matches), to_address)
+        _send_smtp(setting("ALERT_EMAIL_FROM", recipients[0]), recipients, subject, text, html)
+    log.info("emailed %d matching slot(s) to %s", len(matches), ", ".join(recipients))
 
 
-def _send_resend(api_key, from_address, to_address, subject, text, html) -> None:
+def _recipients() -> list[str]:
+    """Parse ALERT_EMAIL_TO, which may list several comma-separated addresses.
+
+    Parsed as an RFC 5322 address list so a display name may itself contain a
+    comma, as in '"Slachta, Jill" <jill@example.com>'.
+    """
+    parsed = getaddresses([setting("ALERT_EMAIL_TO", "")])
+    return [formataddr((name, address)) for name, address in parsed if address]
+
+
+def _send_resend(api_key, from_address, to_addresses, subject, text, html) -> None:
     session = new_session()
     resp = session.post(
         RESEND_ENDPOINT,
         headers={"Authorization": f"Bearer {api_key}"},
         json={
             "from": from_address,
-            "to": [to_address],
+            "to": to_addresses,
             "subject": subject,
             "text": text,
             "html": html,
@@ -130,7 +141,7 @@ def _send_resend(api_key, from_address, to_address, subject, text, html) -> None
         raise RuntimeError(f"Resend rejected the email: {resp.status_code} {resp.text}")
 
 
-def _send_smtp(from_address, to_address, subject, text, html) -> None:
+def _send_smtp(from_address, to_addresses, subject, text, html) -> None:
     username = setting("SMTP_USERNAME")
     secret = password("SMTP_PASSWORD")
     if not username or not secret:
@@ -141,7 +152,7 @@ def _send_smtp(from_address, to_address, subject, text, html) -> None:
     message = EmailMessage()
     message["Subject"] = subject
     message["From"] = from_address
-    message["To"] = to_address
+    message["To"] = ", ".join(to_addresses)
     message.set_content(text)
     message.add_alternative(html, subtype="html")
 
