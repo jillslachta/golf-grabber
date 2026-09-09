@@ -1,0 +1,77 @@
+name: Tee time monitor
+
+on:
+  schedule:
+    # Times are UTC. Eastern is UTC-4 in summer and UTC-5 in winter, so each
+    # band is widened by an hour to stay correct year round.
+
+    # Routine sweep: every 15 minutes through the golfing day (roughly
+    # 6am - 9pm Eastern), catching cancellations.
+    - cron: "*/15 11-23,0-2 * * *"
+
+    # Burst: every 5 minutes around the morning tee sheet drops
+    # (Sterling 5:00, Tashua 5:30, Oak Hills 6:00, Longshore 6:30 Eastern).
+    - cron: "*/5 8-11 * * *"
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Check availability but send no email"
+        type: boolean
+        default: false
+
+concurrency:
+  group: tee-times
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Check for tee times
+        env:
+          ALERT_EMAIL_TO: ${{ secrets.ALERT_EMAIL_TO }}
+          ALERT_EMAIL_FROM: ${{ secrets.ALERT_EMAIL_FROM }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          OAK_HILLS_USERNAME: ${{ secrets.OAK_HILLS_USERNAME }}
+          OAK_HILLS_PASSWORD: ${{ secrets.OAK_HILLS_PASSWORD }}
+          STERLING_USERNAME: ${{ secrets.STERLING_USERNAME }}
+          STERLING_PASSWORD: ${{ secrets.STERLING_PASSWORD }}
+          LONGSHORE_USERNAME: ${{ secrets.LONGSHORE_USERNAME }}
+          LONGSHORE_PASSWORD: ${{ secrets.LONGSHORE_PASSWORD }}
+        run: |
+          python -m teemon.cli ${{ inputs.dry_run && '--dry-run' || '' }}
+
+      - name: Remember what was already alerted on
+        if: ${{ !inputs.dry_run }}
+        run: |
+          if [ -z "$(git status --porcelain state/)" ]; then
+            echo "no state change"
+            exit 0
+          fi
+          git config user.name "tee-time-monitor"
+          git config user.email "tee-time-monitor@users.noreply.github.com"
+          git add state/
+          git commit -m "Update alerted tee times [skip ci]"
+          for attempt in 1 2 3; do
+            git pull --rebase --autostash && git push && exit 0
+            sleep 5
+          done
+          echo "could not push state after 3 attempts" >&2
+          exit 1
