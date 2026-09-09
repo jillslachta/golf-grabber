@@ -93,10 +93,9 @@ def main(argv: list[str] | None = None) -> int:
         candidates.append((key, slot, hit))
 
     state = AlertState(STATE_PATH)
-    new_matches = [
-        (slot, hit) for key, slot, hit in candidates if args.no_state or state.is_new(key)
-    ]
-    new_matches.sort(key=lambda m: (m[1]["priority"], m[0].start))
+    unseen = [c for c in candidates if args.no_state or state.is_new(c[0])]
+    unseen.sort(key=lambda c: (c[2]["priority"], c[1].start))
+    new_matches = [(slot, hit) for _, slot, hit in unseen]
 
     for slot, hit in new_matches:
         log.info(
@@ -110,7 +109,9 @@ def main(argv: list[str] | None = None) -> int:
     if new_matches and not args.dry_run:
         notify.send(new_matches, limit=config.MAX_SLOTS_PER_EMAIL)
         now = dt.datetime.now()
-        for key, _, _ in candidates:
+        # Only the slots the email actually listed count as alerted; the rest
+        # stay unseen so the next run can send them.
+        for key, _, _ in unseen[: config.MAX_SLOTS_PER_EMAIL]:
             state.record(key, now)
 
     if not args.no_state and not args.dry_run:

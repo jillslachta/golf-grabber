@@ -15,7 +15,8 @@ from .models import TeeTime
 
 
 def slot_key(course_key: str, slot: TeeTime, players: list[int]) -> str:
-    return f"{course_key}|{slot.start:%Y-%m-%dT%H:%M}|{slot.holes}|{max(players)}"
+    sizes = ",".join(str(p) for p in sorted(players))
+    return f"{course_key}|{slot.start:%Y-%m-%dT%H:%M}|{slot.holes}|{sizes}"
 
 
 class AlertState:
