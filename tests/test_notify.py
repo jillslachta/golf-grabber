@@ -3,7 +3,7 @@ import datetime as dt
 import pytest
 
 from teemon.models import TeeTime
-from teemon.notify import render, send, setting, subject_for
+from teemon.notify import password, render, send, setting, subject_for
 
 
 def match(course="Oak Hills Park (Norwalk)", when="2026-09-12T08:10", players=(2, 4)):
@@ -39,9 +39,14 @@ def test_blank_secret_counts_as_unset(monkeypatch):
     assert setting("SMTP_PORT", "587") == "587"
 
 
-def test_secret_value_keeps_its_whitespace(monkeypatch):
+def test_password_keeps_its_whitespace(monkeypatch):
     monkeypatch.setenv("STERLING_PASSWORD", " hunter2 ")
-    assert setting("STERLING_PASSWORD") == " hunter2 "
+    assert password("STERLING_PASSWORD") == " hunter2 "
+
+
+def test_padded_setting_is_trimmed(monkeypatch):
+    monkeypatch.setenv("SMTP_HOST", " smtp.example.com ")
+    assert setting("SMTP_HOST") == "smtp.example.com"
 
 
 def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):

@@ -21,7 +21,7 @@ def credentials_for(course: dict) -> dict | None:
     if not prefix:
         return None
     username = notify.setting(f"{prefix}_USERNAME")
-    password = notify.setting(f"{prefix}_PASSWORD")
+    password = notify.password(f"{prefix}_PASSWORD")
     if username and password:
         return {"username": username, "password": password}
     return None
