@@ -1,0 +1,16 @@
+[project]
+name = "teemon"
+version = "0.1.0"
+description = "Read-only tee-time monitor for Fairfield County, CT public golf courses"
+requires-python = ">=3.11"
+dependencies = ["requests>=2.32.0"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
