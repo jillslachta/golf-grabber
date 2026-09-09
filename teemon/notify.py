@@ -22,14 +22,18 @@ RESEND_DEFAULT_FROM = "Tee Time Monitor <onboarding@resend.dev>"
 
 
 def setting(name: str, default: str | None = None) -> str | None:
-    """Read an env var, treating blank as unset.
+    """Read a configuration env var, treating blank as unset and trimming it.
 
     GitHub Actions passes an unset secret through as an empty string, so a
-    plain lookup would see configuration that is not really there. The value
-    itself is returned untrimmed, since a password may end in whitespace.
+    plain lookup would see configuration that is not really there.
     """
+    return os.environ.get(name, "").strip() or default
+
+
+def password(name: str) -> str | None:
+    """Read an env var whose value may legitimately end in whitespace."""
     value = os.environ.get(name, "")
-    return value if value.strip() else default
+    return value if value.strip() else None
 
 
 def subject_for(matches: list[tuple[TeeTime, dict]]) -> str:
@@ -128,8 +132,8 @@ def _send_resend(api_key, from_address, to_address, subject, text, html) -> None
 
 def _send_smtp(from_address, to_address, subject, text, html) -> None:
     username = setting("SMTP_USERNAME")
-    password = setting("SMTP_PASSWORD")
-    if not username or not password:
+    secret = password("SMTP_PASSWORD")
+    if not username or not secret:
         raise RuntimeError("Neither RESEND_API_KEY nor SMTP_USERNAME/SMTP_PASSWORD is configured")
     host = setting("SMTP_HOST", "smtp.gmail.com")
     port = int(setting("SMTP_PORT", "587"))
@@ -143,5 +147,5 @@ def _send_smtp(from_address, to_address, subject, text, html) -> None:
 
     with smtplib.SMTP(host, port, timeout=TIMEOUT) as server:
         server.starttls()
-        server.login(username, password)
+        server.login(username, secret)
         server.send_message(message)
