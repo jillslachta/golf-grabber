@@ -10,7 +10,8 @@ on:
     - cron: "*/15 11-23,0-2 * * *"
 
     # Burst: every 5 minutes around the morning tee sheet drops
-    # (Sterling 5:00, Tashua 5:30, Oak Hills 6:00, Longshore 6:30 Eastern).
+    # (H. Smith Richardson 5:00, Sterling 5:00, Tashua 5:30, Oak Hills 6:00,
+    # Longshore 6:30 Eastern).
     - cron: "*/5 8-11 * * *"
 
   workflow_dispatch:
@@ -51,6 +52,8 @@ jobs:
           SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
           OAK_HILLS_USERNAME: ${{ secrets.OAK_HILLS_USERNAME }}
           OAK_HILLS_PASSWORD: ${{ secrets.OAK_HILLS_PASSWORD }}
+          HSR_USERNAME: ${{ secrets.HSR_USERNAME }}
+          HSR_PASSWORD: ${{ secrets.HSR_PASSWORD }}
           STERLING_USERNAME: ${{ secrets.STERLING_USERNAME }}
           STERLING_PASSWORD: ${{ secrets.STERLING_PASSWORD }}
           LONGSHORE_USERNAME: ${{ secrets.LONGSHORE_USERNAME }}

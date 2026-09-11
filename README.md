@@ -1,6 +1,6 @@
 # golf-grabber
 
-Watches the public tee sheets of seven Fairfield County, CT golf courses and emails
+Watches the public tee sheets of eight Fairfield County, CT golf courses and emails
 you when a slot you'd actually want opens up. It only ever reads — it never books,
 changes, or cancels anything.
 
@@ -12,9 +12,11 @@ changes, or cancels anything.
 | Longshore (Westport) | foreUP | Full |
 | Tashua Knolls (Trumbull) | foreUP | Full |
 | Tashua Glen (Trumbull, 9 holes) | foreUP | Full |
+| H. Smith Richardson (Fairfield) | foreUP | Full, resident class when logged in |
 | Sterling Farms (Stamford) | Chelsea Reservations | Full, guest + member views merged |
 | Richter Park (Danbury) | TeeItUp | Full |
 | Ridgefield | GolfNow | **Partial** — the course's own EZLinks site blocks automated reads, so only the times Ridgefield lists on GolfNow are visible |
+| Griffith E. Harris (Greenwich) | WebTrac | **Not watched** — the booking host is behind Cloudflare bot protection and returns HTTP 403 to any script |
 
 ## What counts as a match
 
@@ -22,7 +24,12 @@ changes, or cancels anything.
 - Monday–Friday 4:00–7:00pm (secondary)
 - Room for 2 or 4 players
 
-Edit `WINDOWS` in `teemon/config.py` to change any of that.
+On top of the windows, `CUTOFFS` drops anything starting too late: 18 holes never
+after 3:00pm on any day, and on Sunday 18 holes stop at 8:00am and 9 holes at
+10:00am. The 3:00pm ceiling means the weekday twilight window only ever yields
+9-hole times.
+
+Edit `WINDOWS` and `CUTOFFS` in `teemon/config.py` to change any of that.
 
 ## Alerts
 
@@ -51,6 +58,7 @@ Set these as repository secrets (Settings → Secrets and variables → Actions)
 | `RESEND_API_KEY` | Resend API key (required unless using SMTP) |
 | `ALERT_EMAIL_FROM` | optional; defaults to Resend's `onboarding@resend.dev` |
 | `OAK_HILLS_USERNAME` / `OAK_HILLS_PASSWORD` | optional; unlocks the member booking class |
+| `HSR_USERNAME` / `HSR_PASSWORD` | optional; unlocks the H. Smith Richardson resident class |
 | `STERLING_USERNAME` / `STERLING_PASSWORD` | optional; unlocks the early-access tee sheet |
 | `LONGSHORE_USERNAME` / `LONGSHORE_PASSWORD` | optional; pass-holder class |
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_USERNAME` / `SMTP_PASSWORD` | only if sending via SMTP instead of Resend |
