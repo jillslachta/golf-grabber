@@ -53,6 +53,16 @@ COURSES = [
         "booking_class": 14910,
     },
     {
+        "key": "h_smith_richardson",
+        "name": "H. Smith Richardson (Fairfield)",
+        "fetch": foreup.fetch,
+        "course_id": 21120,
+        "schedule_id": 6992,
+        "booking_class": 8436,  # Non-Resident
+        "member_booking_class": 8437,  # Resident ID & pass holders
+        "credentials_env": "HSR",
+    },
+    {
         "key": "sterling_farms",
         "name": "Sterling Farms (Stamford)",
         "fetch": chelsea.fetch,
@@ -99,3 +109,10 @@ WINDOWS = [
         "priority": 2,
     },
 ]
+
+# Latest start time a slot may have, by hole count. "any" applies every day; a
+# weekday key (Sunday is 6) overrides it for that day.
+CUTOFFS = {
+    "any": {18: "15:00"},
+    6: {18: "08:00", 9: "10:00"},
+}

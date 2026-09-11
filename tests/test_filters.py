@@ -5,12 +5,12 @@ from teemon.filters import match, matching_slots
 from teemon.models import TeeTime
 
 
-def slot(when: str, spots: int = 4, allowed=None) -> TeeTime:
+def slot(when: str, spots: int = 4, allowed=None, holes: int = 18) -> TeeTime:
     return TeeTime(
         course="Test",
         start=dt.datetime.fromisoformat(when),
         open_spots=spots,
-        holes=18,
+        holes=holes,
         booking_url="https://example.com",
         allowed_players=frozenset(allowed or ()),
     )
@@ -31,9 +31,28 @@ def test_weekday_morning_is_ignored():
 
 
 def test_weekday_twilight_matches_at_lower_priority():
-    hit = match(slot("2026-09-10T17:00"), WINDOWS)
+    hit = match(slot("2026-09-10T17:00", holes=9), WINDOWS)
     assert hit["window"] == "weekday twilight"
     assert hit["priority"] == 2
+
+
+def test_eighteen_holes_after_three_is_cut():
+    # Thursday twilight, inside the window but past the 18-hole ceiling.
+    assert match(slot("2026-09-10T17:00"), WINDOWS) is None
+
+
+def test_sunday_eighteen_holes_after_eight_is_cut():
+    assert match(slot("2026-09-13T08:00"), WINDOWS)
+    assert match(slot("2026-09-13T08:01"), WINDOWS) is None
+
+
+def test_sunday_nine_holes_run_until_ten():
+    assert match(slot("2026-09-13T09:30", holes=9), WINDOWS)
+    assert match(slot("2026-09-13T10:01", holes=9), WINDOWS) is None
+
+
+def test_saturday_keeps_the_full_morning_for_eighteen():
+    assert match(slot("2026-09-12T09:30"), WINDOWS)
 
 
 def test_single_open_spot_does_not_match():
@@ -50,7 +69,7 @@ def test_explicit_allowed_players_beats_spot_count():
 
 
 def test_weekend_mornings_sort_ahead_of_twilight():
-    twilight = slot("2026-09-10T17:00")
-    weekend = slot("2026-09-13T09:00")
+    twilight = slot("2026-09-10T17:00", holes=9)
+    weekend = slot("2026-09-12T09:00")
     ordered = matching_slots([twilight, weekend], WINDOWS)
     assert [s.start for s, _ in ordered] == [weekend.start, twilight.start]
