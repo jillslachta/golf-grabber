@@ -90,19 +90,19 @@ COURSES = [
     },
 ]
 
-# Priority 1: weekend mornings. Priority 2: weekday twilight.
+# Friday through Sunday only. Priority 1: mornings. Priority 2: Friday twilight.
 WINDOWS = [
     {
-        "name": "weekend morning",
-        "weekdays": {5, 6},  # Saturday, Sunday
+        "name": "fri-sun morning",
+        "weekdays": {4, 5, 6},  # Friday, Saturday, Sunday
         "start": "06:00",
         "end": "10:00",
         "players": [2, 4],
         "priority": 1,
     },
     {
-        "name": "weekday twilight",
-        "weekdays": {0, 1, 2, 3, 4},
+        "name": "friday twilight",
+        "weekdays": {4},
         "start": "16:00",
         "end": "19:00",
         "players": [2, 4],

@@ -20,13 +20,13 @@ changes, or cancels anything.
 
 ## What counts as a match
 
-- Saturday/Sunday 6:00–10:00am (top priority)
-- Monday–Friday 4:00–7:00pm (secondary)
+- Friday/Saturday/Sunday 6:00–10:00am (top priority)
+- Friday 4:00–7:00pm (secondary)
 - Room for 2 or 4 players
 
 On top of the windows, `CUTOFFS` drops anything starting too late: 18 holes never
 after 3:00pm on any day, and on Sunday 18 holes stop at 8:00am and 9 holes at
-10:00am. The 3:00pm ceiling means the weekday twilight window only ever yields
+10:00am. The 3:00pm ceiling means the Friday twilight window only ever yields
 9-hole times.
 
 Edit `WINDOWS` and `CUTOFFS` in `teemon/config.py` to change any of that.
@@ -47,6 +47,13 @@ after every run. If a slot disappears and later reopens, it alerts again.
 
 GitHub's scheduler can run a few minutes late when it is busy, so treat the burst
 window as a good chance rather than a guarantee of being first.
+
+The schedule has no end date. GitHub does disable scheduled workflows in a
+repository that sees no activity for 60 days, but every run that finds something
+new commits `state/alerted.json`, which keeps the repository active. A quiet
+stretch with no alerts is normal: a slot is only emailed the first time it
+appears, so "no email" usually means "nothing new opened", not "the monitor
+stopped".
 
 ## Configuration
 

@@ -18,7 +18,7 @@ def slot(when: str, spots: int = 4, allowed=None, holes: int = 18) -> TeeTime:
 
 def test_weekend_morning_matches():
     hit = match(slot("2026-09-12T08:00"), WINDOWS)
-    assert hit["window"] == "weekend morning"
+    assert hit["window"] == "fri-sun morning"
     assert hit["players"] == [2, 4]
 
 
@@ -26,19 +26,25 @@ def test_weekend_afternoon_is_ignored():
     assert match(slot("2026-09-12T14:00"), WINDOWS) is None
 
 
-def test_weekday_morning_is_ignored():
-    assert match(slot("2026-09-10T08:00"), WINDOWS) is None
+def test_monday_to_thursday_is_ignored():
+    assert match(slot("2026-09-10T08:00"), WINDOWS) is None  # Thursday morning
+    assert match(slot("2026-09-10T17:00", holes=9), WINDOWS) is None  # Thursday twilight
 
 
-def test_weekday_twilight_matches_at_lower_priority():
-    hit = match(slot("2026-09-10T17:00", holes=9), WINDOWS)
-    assert hit["window"] == "weekday twilight"
+def test_friday_morning_matches():
+    hit = match(slot("2026-09-11T08:00"), WINDOWS)
+    assert hit["window"] == "fri-sun morning"
+
+
+def test_friday_twilight_matches_at_lower_priority():
+    hit = match(slot("2026-09-11T17:00", holes=9), WINDOWS)
+    assert hit["window"] == "friday twilight"
     assert hit["priority"] == 2
 
 
 def test_eighteen_holes_after_three_is_cut():
-    # Thursday twilight, inside the window but past the 18-hole ceiling.
-    assert match(slot("2026-09-10T17:00"), WINDOWS) is None
+    # Friday twilight, inside the window but past the 18-hole ceiling.
+    assert match(slot("2026-09-11T17:00"), WINDOWS) is None
 
 
 def test_sunday_eighteen_holes_after_eight_is_cut():
@@ -69,7 +75,7 @@ def test_explicit_allowed_players_beats_spot_count():
 
 
 def test_weekend_mornings_sort_ahead_of_twilight():
-    twilight = slot("2026-09-10T17:00", holes=9)
+    twilight = slot("2026-09-11T17:00", holes=9)
     weekend = slot("2026-09-12T09:00")
     ordered = matching_slots([twilight, weekend], WINDOWS)
     assert [s.start for s, _ in ordered] == [weekend.start, twilight.start]
