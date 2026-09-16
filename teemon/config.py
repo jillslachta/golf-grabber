@@ -68,7 +68,7 @@ COURSES = [
         "fetch": chelsea.fetch,
         "url": "https://sterling.chelseareservations.com/golf/bookingadmin.aspx",
         "course_value": "1",
-        "player_counts": [2, 4],
+        "player_counts": [2, 3],
         "credentials_env": "STERLING",
     },
     {
