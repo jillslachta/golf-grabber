@@ -68,7 +68,7 @@ COURSES = [
         "fetch": chelsea.fetch,
         "url": "https://sterling.chelseareservations.com/golf/bookingadmin.aspx",
         "course_value": "1",
-        "player_counts": [2, 4],
+        "player_counts": [2, 3],
         "credentials_env": "STERLING",
     },
     {
@@ -90,14 +90,23 @@ COURSES = [
     },
 ]
 
-# Friday through Sunday only. Priority 1: mornings. Priority 2: Friday twilight.
+# Friday through Sunday only. Priority 1: prime windows. Priority 2: Friday
+# twilight. Saturday runs later in the day than Friday and Sunday.
 WINDOWS = [
     {
-        "name": "fri-sun morning",
-        "weekdays": {4, 5, 6},  # Friday, Saturday, Sunday
+        "name": "fri/sun morning",
+        "weekdays": {4, 6},  # Friday, Sunday
         "start": "06:00",
         "end": "10:00",
-        "players": [2, 4],
+        "players": [2, 3],
+        "priority": 1,
+    },
+    {
+        "name": "saturday midday",
+        "weekdays": {5},
+        "start": "10:00",
+        "end": "15:00",
+        "players": [2, 3],
         "priority": 1,
     },
     {
@@ -105,7 +114,7 @@ WINDOWS = [
         "weekdays": {4},
         "start": "16:00",
         "end": "19:00",
-        "players": [2, 4],
+        "players": [2, 3],
         "priority": 2,
     },
 ]

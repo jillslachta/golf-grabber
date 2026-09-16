@@ -20,9 +20,10 @@ changes, or cancels anything.
 
 ## What counts as a match
 
-- Friday/Saturday/Sunday 6:00–10:00am (top priority)
+- Friday/Sunday 6:00–10:00am (top priority)
+- Saturday 10:00am–3:00pm (top priority)
 - Friday 4:00–7:00pm (secondary)
-- Room for 2 or 4 players
+- Room for 2 or 3 players
 
 On top of the windows, `CUTOFFS` drops anything starting too late: 18 holes never
 after 3:00pm on any day, and on Sunday 18 holes stop at 8:00am and 9 holes at

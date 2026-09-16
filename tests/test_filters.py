@@ -16,14 +16,14 @@ def slot(when: str, spots: int = 4, allowed=None, holes: int = 18) -> TeeTime:
     )
 
 
-def test_weekend_morning_matches():
-    hit = match(slot("2026-09-12T08:00"), WINDOWS)
-    assert hit["window"] == "fri-sun morning"
-    assert hit["players"] == [2, 4]
+def test_sunday_morning_matches():
+    hit = match(slot("2026-09-13T07:00"), WINDOWS)
+    assert hit["window"] == "fri/sun morning"
+    assert hit["players"] == [2, 3]
 
 
-def test_weekend_afternoon_is_ignored():
-    assert match(slot("2026-09-12T14:00"), WINDOWS) is None
+def test_friday_afternoon_is_ignored():
+    assert match(slot("2026-09-11T14:00"), WINDOWS) is None
 
 
 def test_monday_to_thursday_is_ignored():
@@ -33,7 +33,7 @@ def test_monday_to_thursday_is_ignored():
 
 def test_friday_morning_matches():
     hit = match(slot("2026-09-11T08:00"), WINDOWS)
-    assert hit["window"] == "fri-sun morning"
+    assert hit["window"] == "fri/sun morning"
 
 
 def test_friday_twilight_matches_at_lower_priority():
@@ -57,25 +57,32 @@ def test_sunday_nine_holes_run_until_ten():
     assert match(slot("2026-09-13T10:01", holes=9), WINDOWS) is None
 
 
-def test_saturday_keeps_the_full_morning_for_eighteen():
-    assert match(slot("2026-09-12T09:30"), WINDOWS)
+def test_saturday_runs_from_ten_to_three():
+    assert match(slot("2026-09-12T09:59"), WINDOWS) is None
+    assert match(slot("2026-09-12T10:00"), WINDOWS)["window"] == "saturday midday"
+    assert match(slot("2026-09-12T14:30"), WINDOWS)
+    assert match(slot("2026-09-12T15:01"), WINDOWS) is None
 
 
 def test_single_open_spot_does_not_match():
-    assert match(slot("2026-09-12T08:00", spots=1), WINDOWS) is None
+    assert match(slot("2026-09-12T11:00", spots=1), WINDOWS) is None
 
 
-def test_three_open_spots_only_offers_a_twosome():
-    assert match(slot("2026-09-12T08:00", spots=3), WINDOWS)["players"] == [2]
+def test_two_open_spots_only_offers_a_twosome():
+    assert match(slot("2026-09-12T11:00", spots=2), WINDOWS)["players"] == [2]
+
+
+def test_foursome_only_slot_does_not_match():
+    assert match(slot("2026-09-12T11:00", spots=4, allowed=[4]), WINDOWS) is None
 
 
 def test_explicit_allowed_players_beats_spot_count():
-    hit = match(slot("2026-09-12T08:00", spots=4, allowed=[1, 2]), WINDOWS)
+    hit = match(slot("2026-09-12T11:00", spots=4, allowed=[1, 2]), WINDOWS)
     assert hit["players"] == [2]
 
 
-def test_weekend_mornings_sort_ahead_of_twilight():
+def test_prime_windows_sort_ahead_of_twilight():
     twilight = slot("2026-09-11T17:00", holes=9)
-    weekend = slot("2026-09-12T09:00")
-    ordered = matching_slots([twilight, weekend], WINDOWS)
-    assert [s.start for s, _ in ordered] == [weekend.start, twilight.start]
+    saturday = slot("2026-09-12T11:00")
+    ordered = matching_slots([twilight, saturday], WINDOWS)
+    assert [s.start for s, _ in ordered] == [saturday.start, twilight.start]

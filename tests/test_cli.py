@@ -7,7 +7,7 @@ from teemon.models import TeeTime
 def _slot(minute: int) -> TeeTime:
     return TeeTime(
         course="Oak Hills Park (Norwalk)",
-        start=dt.datetime(2026, 9, 12, 6, minute),
+        start=dt.datetime(2026, 9, 12, 11, minute),
         open_spots=4,
         holes=18,
         booking_url="https://example.com",

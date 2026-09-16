@@ -46,7 +46,7 @@ def _fetch_as(course: dict, days: list[dt.date], credentials: dict | None) -> li
 
     results: list[TeeTime] = []
     for day in days:
-        for players in course.get("player_counts", [2, 4]):
+        for players in course.get("player_counts", [2, 3]):
             results.extend(_fetch_day(session, url, course, html, day, players))
     return results
 
