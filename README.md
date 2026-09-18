@@ -38,6 +38,18 @@ New matches are emailed with course, date, time, group sizes and a direct bookin
 link. Each slot is alerted once: `state/alerted.json` is committed back to the repo
 after every run. If a slot disappears and later reopens, it alerts again.
 
+### Text messages
+
+Add a carrier email-to-SMS gateway address to `ALERT_EMAIL_TO` (for example
+`2035551234@mms.att.net`) and it arrives as a text. Those recipients get their own
+stripped-down plain-text message listing at most `SMS_MAX_SLOTS` slots, since a
+phone shows the whole body; inbox recipients still get the full HTML table.
+
+Resend's shared sandbox sender only delivers to the address that owns the Resend
+account, so texting requires either a domain verified with Resend or sending over
+SMTP (Gmail with an app password works: set `SMTP_USERNAME`/`SMTP_PASSWORD` and
+leave `RESEND_API_KEY` unset).
+
 ## Schedule
 
 `.github/workflows/tee-times.yml` runs on GitHub Actions:
@@ -62,7 +74,7 @@ Set these as repository secrets (Settings → Secrets and variables → Actions)
 
 | Secret | Purpose |
 | --- | --- |
-| `ALERT_EMAIL_TO` | where alerts go (required); comma-separate for several recipients |
+| `ALERT_EMAIL_TO` | where alerts go (required); comma-separate for several recipients, including carrier SMS gateway addresses |
 | `RESEND_API_KEY` | Resend API key (required unless using SMTP) |
 | `ALERT_EMAIL_FROM` | optional; defaults to Resend's `onboarding@resend.dev` |
 | `OAK_HILLS_USERNAME` / `OAK_HILLS_PASSWORD` | optional; unlocks the member booking class |
