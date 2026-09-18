@@ -142,11 +142,29 @@ def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
 
     inboxes = [r for r in recipients if not is_sms(r)]
     phones = [r for r in recipients if is_sms(r)]
-    if inboxes:
-        _deliver(inboxes, subject, text, html)
-    if phones:
-        _deliver(phones, "Tee time open", render_sms(matches, omitted), None)
-    log.info("alerted %d matching slot(s) to %s", len(matches), ", ".join(recipients))
+
+    # Both groups are attempted, and one delivery counts as sent: the caller
+    # records the slots only when send() returns, so raising after a partial
+    # success would re-alert the group that already received the message.
+    delivered, failures = [], []
+    for group, group_subject, group_text, group_html in (
+        (inboxes, subject, text, html),
+        (phones, "Tee time open", render_sms(matches, omitted), None),
+    ):
+        if not group:
+            continue
+        try:
+            _deliver(group, group_subject, group_text, group_html)
+        except Exception as exc:
+            failures.append(f"{', '.join(group)}: {exc}")
+        else:
+            delivered.extend(group)
+
+    for failure in failures:
+        log.error("alert delivery failed for %s", failure)
+    if not delivered:
+        raise RuntimeError("; ".join(failures))
+    log.info("alerted %d matching slot(s) to %s", len(matches), ", ".join(delivered))
 
 
 def _deliver(recipients: list[str], subject: str, text: str, html: str | None) -> None:
