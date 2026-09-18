@@ -78,6 +78,66 @@ def test_blank_credentials_do_not_fall_through_to_smtp(monkeypatch):
         send([match()])
 
 
+def test_carrier_gateway_recipients_get_their_own_short_text(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, 6175550123@mms.att.net")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    calls = []
+    monkeypatch.setattr(
+        notify,
+        "_send_resend",
+        lambda key, sender, to, subject, text, html: calls.append((to, text, html)),
+    )
+
+    send([match()])
+
+    (inbox_to, inbox_text, inbox_html), (phone_to, phone_text, phone_html) = calls
+    assert inbox_to == ["golfer@example.com"] and inbox_html
+    assert phone_to == ["6175550123@mms.att.net"]
+    assert phone_html is None
+    assert len(phone_text) < len(inbox_text)
+    assert "https://example.com/book" in phone_text
+
+
+def test_channels_split_inboxes_from_gateways(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, 6175550123@mms.att.net")
+    assert notify.channels() == {
+        notify.EMAIL: ["golfer@example.com"],
+        notify.SMS: ["6175550123@mms.att.net"],
+    }
+
+
+def test_send_can_target_one_channel(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, 6175550123@mms.att.net")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    calls = []
+    monkeypatch.setattr(
+        notify,
+        "_send_resend",
+        lambda key, sender, to, subject, text, html: calls.append(to),
+    )
+
+    send([match()], channel=notify.SMS)
+
+    assert calls == [["6175550123@mms.att.net"]]
+
+
+def test_send_reports_how_many_slots_the_text_listed(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "6175550123@mms.att.net")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setattr(notify, "_send_resend", lambda *args, **kw: None)
+    matches = [match(when=f"2026-09-12T08:{minute:02d}") for minute in range(0, 50, 10)]
+
+    assert send(matches) == notify.SMS_MAX_SLOTS
+    assert send(matches[:2]) == 2
+
+
+def test_sms_body_lists_at_most_three_slots():
+    matches = [match(when=f"2026-09-12T08:{minute:02d}") for minute in range(0, 50, 10)]
+    text = notify.render_sms(matches)
+    assert text.count("https://example.com/book") == notify.SMS_MAX_SLOTS
+    assert text.endswith("+2 more")
+
+
 def test_body_reports_omitted_slots():
     text, html = render([match()], omitted=7)
     assert "7 further matching slot(s) not listed" in text

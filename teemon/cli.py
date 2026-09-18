@@ -92,11 +92,20 @@ def main(argv: list[str] | None = None) -> int:
         candidates.append((key, slot, hit))
 
     state = AlertState(STATE_PATH)
-    unseen = [c for c in candidates if args.no_state or state.is_new(c[0])]
-    unseen.sort(key=lambda c: (c[2]["priority"], c[1].start))
-    new_matches = [(slot, hit) for _, slot, hit in unseen]
+    candidates.sort(key=lambda c: (c[2]["priority"], c[1].start))
 
-    for slot, hit in new_matches:
+    channels = [notify.EMAIL]
+    if candidates and not args.dry_run:
+        channels = list(notify.channels())
+    unseen_by_channel = {
+        channel: [c for c in candidates if args.no_state or state.is_new(c[0], channel)]
+        for channel in channels
+    }
+    # A slot counts as new while any configured channel still owes it.
+    new_keys = {key for unseen in unseen_by_channel.values() for key, _, _ in unseen}
+    new_matches = [c for c in candidates if c[0] in new_keys]
+
+    for _, slot, hit in new_matches:
         log.info(
             "MATCH %s %s (%s players, %s)",
             slot.course,
@@ -105,13 +114,28 @@ def main(argv: list[str] | None = None) -> int:
             hit["window"],
         )
 
-    if new_matches and not args.dry_run:
-        notify.send(new_matches, limit=config.MAX_SLOTS_PER_EMAIL)
-        now = dt.datetime.now()
-        # Only the slots the email actually listed count as alerted; the rest
-        # stay unseen so the next run can send them.
-        for key, _, _ in unseen[: config.MAX_SLOTS_PER_EMAIL]:
-            state.record(key, now)
+    undelivered: list[str] = []
+    if not args.dry_run:
+        # Each channel keeps its own alerted list, so a channel that fails is
+        # retried on the next run without re-alerting the channels that worked.
+        for channel, unseen in unseen_by_channel.items():
+            if not unseen:
+                continue
+            try:
+                listed = notify.send(
+                    [(slot, hit) for _, slot, hit in unseen],
+                    limit=config.MAX_SLOTS_PER_EMAIL,
+                    channel=channel,
+                )
+            except Exception as exc:  # noqa: BLE001 - one channel must not stop the rest
+                undelivered.append(f"{channel}: {exc}")
+                log.error("could not alert over %s: %s", channel, exc)
+                continue
+            now = dt.datetime.now()
+            # Only the slots the message actually listed count as alerted; the
+            # rest stay unseen so the next run can send them.
+            for key, _, _ in unseen[:listed]:
+                state.record(key, now, channel)
 
     if not args.no_state and not args.dry_run:
         state.prune(live_keys, checked, today)
@@ -123,6 +147,9 @@ def main(argv: list[str] | None = None) -> int:
         f"{len(found)} open slots, {len(candidates)} matching preferences, "
         f"{len(new_matches)} new, {len(problems)} course(s) skipped"
     )
+    if undelivered:
+        log.error("alerts not delivered: %s", "; ".join(undelivered))
+        return 1
     return 0
 
 
