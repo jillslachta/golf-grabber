@@ -101,8 +101,9 @@ def main(argv: list[str] | None = None) -> int:
         channel: [c for c in candidates if args.no_state or state.is_new(c[0], channel)]
         for channel in channels
     }
-    # For logging: whichever channel is furthest behind covers every new slot.
-    new_matches = max(unseen_by_channel.values(), key=len, default=[])
+    # A slot counts as new while any configured channel still owes it.
+    new_keys = {key for unseen in unseen_by_channel.values() for key, _, _ in unseen}
+    new_matches = [c for c in candidates if c[0] in new_keys]
 
     for _, slot, hit in new_matches:
         log.info(
@@ -121,7 +122,7 @@ def main(argv: list[str] | None = None) -> int:
             if not unseen:
                 continue
             try:
-                notify.send(
+                listed = notify.send(
                     [(slot, hit) for _, slot, hit in unseen],
                     limit=config.MAX_SLOTS_PER_EMAIL,
                     channel=channel,
@@ -133,7 +134,7 @@ def main(argv: list[str] | None = None) -> int:
             now = dt.datetime.now()
             # Only the slots the message actually listed count as alerted; the
             # rest stay unseen so the next run can send them.
-            for key, _, _ in unseen[: config.MAX_SLOTS_PER_EMAIL]:
+            for key, _, _ in unseen[:listed]:
                 state.record(key, now, channel)
 
     if not args.no_state and not args.dry_run:

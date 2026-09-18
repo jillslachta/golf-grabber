@@ -121,6 +121,16 @@ def test_send_can_target_one_channel(monkeypatch):
     assert calls == [["6175550123@mms.att.net"]]
 
 
+def test_send_reports_how_many_slots_the_text_listed(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "6175550123@mms.att.net")
+    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    monkeypatch.setattr(notify, "_send_resend", lambda *args, **kw: None)
+    matches = [match(when=f"2026-09-12T08:{minute:02d}") for minute in range(0, 50, 10)]
+
+    assert send(matches) == notify.SMS_MAX_SLOTS
+    assert send(matches[:2]) == 2
+
+
 def test_sms_body_lists_at_most_three_slots():
     matches = [match(when=f"2026-09-12T08:{minute:02d}") for minute in range(0, 50, 10)]
     text = notify.render_sms(matches)

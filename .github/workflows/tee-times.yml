@@ -62,7 +62,9 @@ jobs:
           python -m teemon.cli ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Remember what was already alerted on
-        if: ${{ !inputs.dry_run }}
+        # Runs even when the check failed: a channel that was alerted before the
+        # failure must not be alerted again on the next run.
+        if: ${{ !cancelled() && !inputs.dry_run }}
         run: |
           if [ -z "$(git status --porcelain state/)" ]; then
             echo "no state change"

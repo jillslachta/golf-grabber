@@ -151,21 +151,29 @@ def send(
     matches: list[tuple[TeeTime, dict]],
     limit: int | None = None,
     channel: str | None = None,
-) -> None:
+) -> int:
+    """Alert the configured channels and return how many slots were listed.
+
+    A text lists fewer slots than an email, so the caller needs the count to
+    know which slots still have to be alerted on a later run.
+    """
     omitted = 0
     if limit is not None and len(matches) > limit:
         omitted = len(matches) - limit
         matches = matches[:limit]
 
+    listed = len(matches)
     for name, recipients in channels().items():
         if channel is not None and name != channel:
             continue
         if name == SMS:
+            listed = min(listed, SMS_MAX_SLOTS)
             _deliver(recipients, "Tee time open", render_sms(matches, omitted), None)
         else:
             text, html = render(matches, omitted)
             _deliver(recipients, subject_for(matches), text, html)
-        log.info("alerted %d matching slot(s) to %s", len(matches), ", ".join(recipients))
+        log.info("alerted %d matching slot(s) to %s", listed, ", ".join(recipients))
+    return listed
 
 
 def _deliver(recipients: list[str], subject: str, text: str, html: str | None) -> None:
