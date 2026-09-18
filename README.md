@@ -45,6 +45,10 @@ Add a carrier email-to-SMS gateway address to `ALERT_EMAIL_TO` (for example
 stripped-down plain-text message listing at most `SMS_MAX_SLOTS` slots, since a
 phone shows the whole body; inbox recipients still get the full HTML table.
 
+Email and text are tracked separately in `state/alerted.json`, so a text the carrier
+rejects is retried on the next run without re-emailing the inbox that already got it
+(the run exits non-zero so the failure is visible in Actions).
+
 Resend's shared sandbox sender only delivers to the address that owns the Resend
 account, so texting requires either a domain verified with Resend or sending over
 SMTP (Gmail with an app password works: set `SMTP_USERNAME`/`SMTP_PASSWORD` and

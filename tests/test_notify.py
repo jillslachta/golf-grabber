@@ -98,35 +98,27 @@ def test_carrier_gateway_recipients_get_their_own_short_text(monkeypatch):
     assert "https://example.com/book" in phone_text
 
 
-def test_a_failed_gateway_does_not_undo_a_delivered_email(monkeypatch):
-    """The caller records slots only when send() returns, so a partial success must stand."""
+def test_channels_split_inboxes_from_gateways(monkeypatch):
+    monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, 6175550123@mms.att.net")
+    assert notify.channels() == {
+        notify.EMAIL: ["golfer@example.com"],
+        notify.SMS: ["6175550123@mms.att.net"],
+    }
+
+
+def test_send_can_target_one_channel(monkeypatch):
     monkeypatch.setenv("ALERT_EMAIL_TO", "golfer@example.com, 6175550123@mms.att.net")
     monkeypatch.setenv("RESEND_API_KEY", "re_test")
-    sent = []
-
-    def fake_send(key, sender, to, subject, text, html):
-        if notify.is_sms(to[0]):
-            raise RuntimeError("gateway rejected the message")
-        sent.append(to)
-
-    monkeypatch.setattr(notify, "_send_resend", fake_send)
-
-    send([match()])
-
-    assert sent == [["golfer@example.com"]]
-
-
-def test_send_raises_when_no_recipient_group_is_delivered(monkeypatch):
-    monkeypatch.setenv("ALERT_EMAIL_TO", "6175550123@mms.att.net")
-    monkeypatch.setenv("RESEND_API_KEY", "re_test")
+    calls = []
     monkeypatch.setattr(
         notify,
         "_send_resend",
-        lambda *args, **kw: (_ for _ in ()).throw(RuntimeError("gateway rejected the message")),
+        lambda key, sender, to, subject, text, html: calls.append(to),
     )
 
-    with pytest.raises(RuntimeError, match="gateway rejected"):
-        send([match()])
+    send([match()], channel=notify.SMS)
+
+    assert calls == [["6175550123@mms.att.net"]]
 
 
 def test_sms_body_lists_at_most_three_slots():

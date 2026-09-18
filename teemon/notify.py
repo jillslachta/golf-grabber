@@ -46,6 +46,9 @@ SMS_GATEWAYS = frozenset(
 # carriers do not split or truncate it mid-link.
 SMS_MAX_SLOTS = 3
 
+EMAIL = "email"
+SMS = "sms"
+
 
 def setting(name: str, default: str | None = None) -> str | None:
     """Read a configuration env var, treating blank as unset and trimming it.
@@ -128,43 +131,41 @@ def render_sms(matches: list[tuple[TeeTime, dict]], omitted: int = 0) -> str:
     return "\n".join(lines)
 
 
-def send(matches: list[tuple[TeeTime, dict]], limit: int | None = None) -> None:
+def channels() -> dict[str, list[str]]:
+    """The configured recipients, split by the kind of message they can read.
+
+    Each channel is alerted and remembered on its own, so a carrier gateway that
+    rejects a text neither re-alerts the inbox nor loses the slot for the phone.
+    """
+    recipients = _recipients()
+    if not recipients:
+        raise RuntimeError("ALERT_EMAIL_TO is not set, so there is nowhere to send alerts")
+    groups = {
+        EMAIL: [r for r in recipients if not is_sms(r)],
+        SMS: [r for r in recipients if is_sms(r)],
+    }
+    return {channel: group for channel, group in groups.items() if group}
+
+
+def send(
+    matches: list[tuple[TeeTime, dict]],
+    limit: int | None = None,
+    channel: str | None = None,
+) -> None:
     omitted = 0
     if limit is not None and len(matches) > limit:
         omitted = len(matches) - limit
         matches = matches[:limit]
 
-    recipients = _recipients()
-    if not recipients:
-        raise RuntimeError("ALERT_EMAIL_TO is not set, so there is nowhere to send alerts")
-    subject = subject_for(matches)
-    text, html = render(matches, omitted)
-
-    inboxes = [r for r in recipients if not is_sms(r)]
-    phones = [r for r in recipients if is_sms(r)]
-
-    # Both groups are attempted, and one delivery counts as sent: the caller
-    # records the slots only when send() returns, so raising after a partial
-    # success would re-alert the group that already received the message.
-    delivered, failures = [], []
-    for group, group_subject, group_text, group_html in (
-        (inboxes, subject, text, html),
-        (phones, "Tee time open", render_sms(matches, omitted), None),
-    ):
-        if not group:
+    for name, recipients in channels().items():
+        if channel is not None and name != channel:
             continue
-        try:
-            _deliver(group, group_subject, group_text, group_html)
-        except Exception as exc:
-            failures.append(f"{', '.join(group)}: {exc}")
+        if name == SMS:
+            _deliver(recipients, "Tee time open", render_sms(matches, omitted), None)
         else:
-            delivered.extend(group)
-
-    for failure in failures:
-        log.error("alert delivery failed for %s", failure)
-    if not delivered:
-        raise RuntimeError("; ".join(failures))
-    log.info("alerted %d matching slot(s) to %s", len(matches), ", ".join(delivered))
+            text, html = render(matches, omitted)
+            _deliver(recipients, subject_for(matches), text, html)
+        log.info("alerted %d matching slot(s) to %s", len(matches), ", ".join(recipients))
 
 
 def _deliver(recipients: list[str], subject: str, text: str, html: str | None) -> None:
