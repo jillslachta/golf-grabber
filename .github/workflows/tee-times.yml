@@ -4,15 +4,16 @@ on:
   schedule:
     # Times are UTC. Eastern is UTC-4 in summer and UTC-5 in winter, so each
     # band is widened by an hour to stay correct year round.
+    # Minutes are offset from :00, when GitHub delays or drops the most runs.
 
     # Routine sweep: every 15 minutes through the golfing day (roughly
     # 6am - 9pm Eastern), catching cancellations.
-    - cron: "*/15 11-23,0-2 * * *"
+    - cron: "7-59/15 11-23,0-2 * * *"
 
     # Burst: every 5 minutes around the morning tee sheet drops
     # (H. Smith Richardson 5:00, Sterling 5:00, Tashua 5:30, Oak Hills 6:00,
     # Longshore 6:30 Eastern).
-    - cron: "*/5 8-11 * * *"
+    - cron: "2-59/5 8-11 * * *"
 
   workflow_dispatch:
     inputs:
