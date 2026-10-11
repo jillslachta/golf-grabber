@@ -1,4 +1,4 @@
-"""foreUP booking system (Oak Hills, Longshore, Tashua Knolls, Tashua Glen)."""
+"""foreUP booking system (Oak Hills, Longshore, Tashua, H. Smith Richardson, Pound Ridge)."""
 
 from __future__ import annotations
 

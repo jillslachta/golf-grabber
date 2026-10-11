@@ -63,6 +63,14 @@ COURSES = [
         "credentials_env": "HSR",
     },
     {
+        "key": "pound_ridge",
+        "name": "Pound Ridge (NY)",
+        "fetch": foreup.fetch,
+        "course_id": 21116,
+        "schedule_id": 7087,
+        "booking_class": 8447,  # Public
+    },
+    {
         "key": "sterling_farms",
         "name": "Sterling Farms (Stamford)",
         "fetch": chelsea.fetch,

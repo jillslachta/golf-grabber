@@ -1,8 +1,8 @@
 # golf-grabber
 
-Watches the public tee sheets of eight Fairfield County, CT golf courses and emails
-you when a slot you'd actually want opens up. It only ever reads — it never books,
-changes, or cancels anything.
+Watches the public tee sheets of nine golf courses in and around Fairfield County,
+CT and emails you when a slot you'd actually want opens up. It only ever reads — it
+never books, changes, or cancels anything.
 
 ## What it watches
 
@@ -13,6 +13,7 @@ changes, or cancels anything.
 | Tashua Knolls (Trumbull) | foreUP | Full |
 | Tashua Glen (Trumbull, 9 holes) | foreUP | Full |
 | H. Smith Richardson (Fairfield) | foreUP | Full, resident class when logged in |
+| Pound Ridge (NY) | foreUP | Full, public class |
 | Sterling Farms (Stamford) | Chelsea Reservations | Full, guest + member views merged |
 | Richter Park (Danbury) | TeeItUp | Full |
 | Ridgefield | GolfNow | **Partial** — the course's own EZLinks site blocks automated reads, so only the times Ridgefield lists on GolfNow are visible |
