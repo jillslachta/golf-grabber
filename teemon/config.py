@@ -76,7 +76,7 @@ COURSES = [
         "fetch": chelsea.fetch,
         "url": "https://sterling.chelseareservations.com/golf/bookingadmin.aspx",
         "course_value": "1",
-        "player_counts": [2, 3],
+        "player_counts": [2, 3, 4],
         "credentials_env": "STERLING",
     },
     {
@@ -106,7 +106,7 @@ WINDOWS = [
         "weekdays": {4, 6},  # Friday, Sunday
         "start": "06:00",
         "end": "10:00",
-        "players": [2, 3],
+        "players": [2, 3, 4],
         "priority": 1,
     },
     {
@@ -114,7 +114,7 @@ WINDOWS = [
         "weekdays": {5},
         "start": "10:00",
         "end": "15:00",
-        "players": [2, 3],
+        "players": [2, 3, 4],
         "priority": 1,
     },
     {
@@ -122,7 +122,7 @@ WINDOWS = [
         "weekdays": {4},
         "start": "16:00",
         "end": "19:00",
-        "players": [2, 3],
+        "players": [2, 3, 4],
         "priority": 2,
     },
 ]

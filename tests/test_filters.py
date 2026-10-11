@@ -19,7 +19,7 @@ def slot(when: str, spots: int = 4, allowed=None, holes: int = 18) -> TeeTime:
 def test_sunday_morning_matches():
     hit = match(slot("2026-09-13T07:00"), WINDOWS)
     assert hit["window"] == "fri/sun morning"
-    assert hit["players"] == [2, 3]
+    assert hit["players"] == [2, 3, 4]
 
 
 def test_friday_afternoon_is_ignored():
@@ -72,8 +72,8 @@ def test_two_open_spots_only_offers_a_twosome():
     assert match(slot("2026-09-12T11:00", spots=2), WINDOWS)["players"] == [2]
 
 
-def test_foursome_only_slot_does_not_match():
-    assert match(slot("2026-09-12T11:00", spots=4, allowed=[4]), WINDOWS) is None
+def test_foursome_only_slot_matches():
+    assert match(slot("2026-09-12T11:00", spots=4, allowed=[4]), WINDOWS)["players"] == [4]
 
 
 def test_explicit_allowed_players_beats_spot_count():
