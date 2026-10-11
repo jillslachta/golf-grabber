@@ -62,6 +62,8 @@ leave `RESEND_API_KEY` unset).
 - every 15 minutes through the golfing day, to catch cancellations
 - every 5 minutes across the morning release window (Sterling 5:00, Tashua 5:30,
   Oak Hills 6:00, Longshore 6:30 Eastern), to catch new days as they drop
+- every 5 minutes from midnight Eastern, checking Pound Ridge only, since its
+  public tee sheet releases each new day at 12:00am
 
 GitHub's scheduler can run a few minutes late when it is busy, so treat the burst
 window as a good chance rather than a guarantee of being first.
