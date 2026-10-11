@@ -14,6 +14,11 @@ on:
     # Longshore 6:30 Eastern).
     - cron: "*/5 8-11 * * *"
 
+    # Midnight: every 5 minutes from midnight Eastern, Pound Ridge only, for
+    # the new day its public tee sheet releases at 12:00am. The run step
+    # matches this exact string to limit the run to that course.
+    - cron: "2-59/5 4-5 * * *"
+
   workflow_dispatch:
     inputs:
       dry_run:
@@ -59,7 +64,9 @@ jobs:
           LONGSHORE_USERNAME: ${{ secrets.LONGSHORE_USERNAME }}
           LONGSHORE_PASSWORD: ${{ secrets.LONGSHORE_PASSWORD }}
         run: |
-          python -m teemon.cli ${{ inputs.dry_run && '--dry-run' || '' }}
+          python -m teemon.cli \
+            ${{ github.event.schedule == '2-59/5 4-5 * * *' && '--courses pound_ridge' || '' }} \
+            ${{ inputs.dry_run && '--dry-run' || '' }}
 
       - name: Remember what was already alerted on
         # Runs even when the check failed: a channel that was alerted before the

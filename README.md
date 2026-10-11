@@ -1,8 +1,8 @@
 # golf-grabber
 
-Watches the public tee sheets of eight Fairfield County, CT golf courses and emails
-you when a slot you'd actually want opens up. It only ever reads — it never books,
-changes, or cancels anything.
+Watches the public tee sheets of nine golf courses in and around Fairfield County,
+CT and emails you when a slot you'd actually want opens up. It only ever reads — it
+never books, changes, or cancels anything.
 
 ## What it watches
 
@@ -13,6 +13,7 @@ changes, or cancels anything.
 | Tashua Knolls (Trumbull) | foreUP | Full |
 | Tashua Glen (Trumbull, 9 holes) | foreUP | Full |
 | H. Smith Richardson (Fairfield) | foreUP | Full, resident class when logged in |
+| Pound Ridge (NY) | foreUP | Full, public class |
 | Sterling Farms (Stamford) | Chelsea Reservations | Full, guest + member views merged |
 | Richter Park (Danbury) | TeeItUp | Full |
 | Ridgefield | GolfNow | **Partial** — the course's own EZLinks site blocks automated reads, so only the times Ridgefield lists on GolfNow are visible |
@@ -23,7 +24,7 @@ changes, or cancels anything.
 - Friday/Sunday 6:00–10:00am (top priority)
 - Saturday 10:00am–3:00pm (top priority)
 - Friday 4:00–7:00pm (secondary)
-- Room for 2 or 3 players
+- Room for 2, 3 or 4 players
 
 On top of the windows, `CUTOFFS` drops anything starting too late: 18 holes never
 after 3:00pm on any day, and on Sunday 18 holes stop at 8:00am and 9 holes at
@@ -61,6 +62,8 @@ leave `RESEND_API_KEY` unset).
 - every 15 minutes through the golfing day, to catch cancellations
 - every 5 minutes across the morning release window (Sterling 5:00, Tashua 5:30,
   Oak Hills 6:00, Longshore 6:30 Eastern), to catch new days as they drop
+- every 5 minutes from midnight Eastern, checking Pound Ridge only, since its
+  public tee sheet releases each new day at 12:00am
 
 GitHub's scheduler can run a few minutes late when it is busy, so treat the burst
 window as a good chance rather than a guarantee of being first.
