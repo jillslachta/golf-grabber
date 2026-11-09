@@ -57,7 +57,13 @@ leave `RESEND_API_KEY` unset).
 
 ## Schedule
 
-`.github/workflows/tee-times.yml` runs on GitHub Actions:
+**Paused for the off-season.** The `schedule:` block in
+`.github/workflows/tee-times.yml` is commented out, so no checks run and no
+alerts are sent. Manual runs from the Actions tab still work. To resume, uncomment
+that block in a PR and merge it; GitHub may take up to a day to start the
+schedule again.
+
+When active, `.github/workflows/tee-times.yml` runs on GitHub Actions:
 
 - every 15 minutes through the golfing day, to catch cancellations
 - every 5 minutes across the morning release window (Sterling 5:00, Tashua 5:30,
